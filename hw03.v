@@ -972,12 +972,26 @@ Proof.
      constructor. auto. apply H1. auto. assert (free e2 x -> False).
      intuition. assert (free (e1 @ e2) x) .  apply FreeApp_r. auto. apply H1.
      auto.  econstructor. eapply IHtyped1. auto. eapply IHtyped2. auto.
-  - h_auto. assert (x = x0 \/ (free e x0 -> False)). admit.
+  - h_auto. assert (x = x0 \/ ( (x <> x0) /\(free e x0 -> False))). h_auto.  admit.
     destruct H1. rewrite <- H1.  assert ( env_equiv (extend (extend env0 x t') x tA) 
     (extend env0 x tA)). apply (@env_equiv_overwrite env0 x t' tA ). apply (@env_equiv_typed
-     (extend env0 x tA) ht e tB ) . auto. apply env_equiv_sym. auto.
-     apply IHtyped with (x0 := x ) (t' := tA) (
-Admitted.
+     (extend env0 x tA) ht e tB ) . auto. apply env_equiv_sym. auto. destruct H1.
+    assert (env_equiv (extend (extend env0 x tA) x0 t') (extend (extend env0 x0 t') x tA)).
+    apply env_equiv_neq. assumption. apply env_equiv_refl. 
+    eapply (@env_equiv_typed (extend (extend env0 x tA) x0 t') ht e tB).
+    apply IHtyped. auto. auto.
+  -intuition. h_auto.
+  -intuition. h_auto. apply IHtyped with (x := x) (t' := t'). intuition. assert (free (ref e) x).
+   constructor. auto. apply H0. auto.
+  -intuition. h_auto. apply IHtyped with (x := x) (t' := t'). intuition. assert (free (!e) x).
+   constructor. auto. apply H0. auto.
+  -intuition. h_auto. assert (free e1 x -> False). intuition.  assert (free (e1 <- e2) x).
+   constructor. auto. apply H1. auto. 
+   assert (free e2 x -> False). intuition.  assert (free (e1 <- e2) x).
+   apply FreeAssign_r.  auto.  apply H1. auto. econstructor. apply IHtyped1. auto.
+   apply IHtyped2. auto.
+
+Qed.
 (* END PROBLEM 6 *)
 
 (* Next, we'll define another notion of equivalence: equivalence of
@@ -1109,6 +1123,7 @@ Lemma subst_pres_typed:
       typed env ht e2 tA ->
       typed env ht e3 tB.
 Proof.
+  
   (* About 52 tactics *)
 Admitted.
 (* END PROBLEM 7 *)
