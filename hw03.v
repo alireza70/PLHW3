@@ -1124,7 +1124,8 @@ Lemma subst_pres_typed:
       typed env ht e3 tB.
 Proof.
   
-  (* About 52 tactics *)
+  induction 1; intros.
+  -(* About 52 tactics *)
 Admitted.
 (* END PROBLEM 7 *)
 
@@ -1170,13 +1171,22 @@ Inductive heap_typ_extends: heap_typ -> heap_typ -> Prop :=
 
 *)
 Lemma extends_lookup :
-  forall h h' a,
+  forall a h h',
     a < length h ->
     heap_typ_extends h' h ->
     lookup_typ h' a = lookup_typ h a.
 Proof.
-  (* About 16 tactics *)
-Admitted.
+  intros a. induction a; intuition.
+  - inversion H0.  rewrite <- H2 in H. inversion H. unfold lookup_typ.
+    simpl. reflexivity.
+  - unfold lookup_typ. inversion H0. rewrite <- H2 in H. inversion H.
+     simpl. inversion H. assert ( lookup_typ h'0 a = lookup_typ h0 a).
+     apply IHa.  rewrite <- H3 in H. assert (length (x :: h0) = S (length h0)).
+     constructor. rewrite H4 in H. h_auto. assumption. unfold lookup_typ in H4. auto.
+     assert ( lookup_typ h'0 a = lookup_typ h0 a).
+     apply IHa. rewrite <- H3 in H. assert (length (x :: h0) = S (length h0)).
+     constructor. rewrite H6 in H. h_auto. assumption. unfold lookup_typ in H6. auto.
+Qed.
 (* END PROBLEM 8 *)
 
 (* Extending a heap increases its length *)
