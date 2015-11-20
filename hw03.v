@@ -81,6 +81,7 @@ Notation "X <- Y"  := (Assign X Y) (at level 51).
 (** Substitution. *)
 
 (** e1[e2/x] = e3 *)
+(* Subst e1 e2 x e3 means substituting e2 for x in e1 gives e3 *)
 Inductive Subst : expr -> expr -> string ->
                   expr -> Prop :=
 | SubstBool:
@@ -492,15 +493,10 @@ Lemma lookup_replace_neq : forall h a1 a2 t,
   a1 <> a2 ->
   lookup (replace a1 t h) a2 = lookup h a2.
 Proof.
-  intros h. unfold lookup.  
-  induction h; intuition.
-    +assert (replace a1 t nil = nil). apply replace_nil. rewrite H0.  reflexivity.
-    + destruct a1. unfold replace. 
-      - destruct a2. intuition. simpl. auto.
-      - assert (replace (S a1) t (a::h) = a :: replace a1 t h). constructor. rewrite H0.
-        destruct a2. 
-        * simpl. auto. 
-        * simpl. apply IHh with (a1 := a1 ) (a2 := a2) (t := t). auto. 
+  unfold lookup. induction h.
+  - intros. rewrite replace_nil. reflexivity.
+  - destruct a1; destruct a2; intuition.
+    + simpl. apply IHh. omega.
 Qed.
 (* END PROBLEM 3 *)
 
