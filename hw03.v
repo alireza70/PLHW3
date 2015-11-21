@@ -1,4 +1,8 @@
 (**
+Homework 3
+Alireza Rezaei
+and
+Alex Takakuwa
 
 Type Soundness in Call-by-value, Simply-typed Lambda Calculus with References
 
@@ -799,33 +803,56 @@ Proof.
   (* About 90 tactics *)
   remember E0.
   induction 1; subst; intros.
-  - assert (isValue b).  constructor.  intuition.
-  -assert(isValue i). constructor. intuition.
-  -assert (isValue x). inversion H. unfold E0 in H.  inversion H. 
-  - destruct IHtyped1; try auto. inversion H2. inversion H3. 
-    assert ( h; (e1 @ e2) ==> x0 ; (x@e2)). econstructor. auto. left. 
-    eexists. eexists. apply H5. destruct IHtyped2. auto. auto. inversion H3. inversion H4.
-    left.    eexists. eexists. assert (h; (e1 @ e2) ==> x0 ; (e1 @ x)). constructor.
-    auto. auto. apply H6. admit. 
- -right. econstructor.
- -right. constructor.
- - destruct IHtyped. auto. auto. inversion H1. inversion H2. left. eexists. eexists.
-   assert (h; (ref e) ==> x0 ; (ref x)). constructor. auto. apply H4. 
-   assert (h; (ref e) ==> (snoc h e) ;(Addr (length h)) ). constructor.
-   auto. left. eexists. eexists. apply H2.
-    
- - destruct IHtyped. auto. auto. inversion H1. inversion H2. left. assert (h ; (!e) ==> x0; (!x)).
-   constructor. auto. eexists. eexists. apply H4. 
-   inversion H1; inversion H; h_auto. inversion H6.
-   assert (length ht = length h). unfold heap_typed in H0. destruct H0. auto.
-   rewrite H2 in H7. rewrite <- H3. eexists. eexists. 
-   apply SDerefAddr with (h := h) (a :=a). auto.  
- - destruct IHtyped1. auto. auto. inversion H2. inversion H3. 
-   left. assert ( h; (e1 <- e2) ==> x0; (x <- e2)). constructor. auto.
-   eexists. eexists. apply H5. destruct IHtyped2. auto. auto.
-   inversion H3. inversion H4. assert (h; (e1 <- e2) ==> x0 ; (e1 <- x)).
-   constructor. auto. auto. left. eexists. eexists. apply H6.
-   inversion H2; inversion H; h_auto. admit.
+  - right. apply VBool.
+  - right. apply VInt.
+  - right. inversion H.
+  - left. destruct IHtyped1; destruct IHtyped2; auto.
+    + destruct H2. destruct H3. destruct H2. destruct H3. 
+      exists (x @ e2). exists (x1).
+      apply SAppLeft. apply H2.
+    + destruct H2. destruct H2.
+      exists (x @ e2). exists (x0).
+      apply SAppLeft. apply H2.
+    + destruct H3. destruct H3.
+      exists (e1 @ x). exists (x0).
+      apply SAppRight.
+      * apply H2.
+      * apply H3.
+    + inv H2; inv H.
+      pose proof can_subst.
+      specialize (H4 e e2 x).
+      destruct H4.
+      exists x0. exists h.
+      apply SApp. apply H3.
+      apply H4.
+  - right. apply VLam.
+  - right. apply VAddr.
+  - left. destruct IHtyped; auto.
+    + destruct H1. destruct H1.
+      exists (ref x). exists (x0).
+      apply SRef. apply H1.
+    + exists (Addr (length h)). exists (snoc h e).
+      apply SRefValue. apply H1.
+   - destruct IHtyped; auto.
+     + left. destruct H1. destruct H1.
+       exists (!x). exists (x0).
+       apply SDeref. apply H1.
+     + left. inv H; inv H1.
+       exists (lookup h a). exists (h).
+       apply SDerefAddr. inv H0. symmetry in H2. rewrite H2 in H6. apply H6.
+   - destruct IHtyped1; destruct IHtyped2; auto.
+     + left. destruct H2; destruct H3. destruct H2; destruct H3.
+       exists (x <- e2). exists (x1).
+       apply SAssignLeft. apply H2.
+     + left. destruct H2. destruct H2.
+       exists (x <- e2). exists (x0).
+       apply SAssignLeft. apply H2.
+     + left. destruct H3. destruct H3.
+       exists (e1 <- x). exists (x0).
+       apply SAssignRight.
+       * apply H2.
+       * apply H3.
+     + left. inv H2; inv H. admit.
  
     
 (* END PROBLEM 4 *)
