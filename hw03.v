@@ -1,9 +1,7 @@
+(* Alireza Rezaei and Alex Takakuwa *)
+
 (**
 Homework 3
-Alireza Rezaei
-and
-Alex Takakuwa
-
 Type Soundness in Call-by-value, Simply-typed Lambda Calculus with References
 
 In this homework, you'll prove soundness for a version of the
