@@ -1181,34 +1181,11 @@ Proof.
     apply env_equiv_overwrite. assert (  typed (extend env0 x tA0) ht e1 tB0 ).
     apply (@env_equiv_typed (extend (extend env0 x tA) x tA0) ht e1 tB0 ). auto.
     auto. econstructor. auto.
-  - inv H2. inv H2. constructor. apply IHSubst with (tA:=tA0).
-    + apply H1.
-    + admit.
-
-  (* This should be easy with the following lemmas *)
-  (* Lemma env_equiv_typed:
-  forall env1 ht e t,
-    typed env1 ht e t ->
-    forall env2,
-      env_equiv env1 env2 ->
-      typed env2 ht e t.
- *)
-
-  (* Lemma free_env_equiv_neq:
-  forall E env1 env2 x1 t1 x2 t2,
-    x1 <> x2 ->
-    free_env_equiv E env1 env2 ->
-    free_env_equiv E (extend (extend env1 x1 t1) x2 t2)
-                     (extend (extend env2 x2 t2) x1 t1).
- *)
-
-  (* Lemma env_equiv_sym:
-  forall e1 e2,
-    env_equiv e1 e2 ->
-    env_equiv e2 e1.
- *)
-
-    + admit.
+  - inv H2. constructor. eapply IHSubst; eauto.
+    + eapply env_equiv_typed; eauto.
+      apply env_equiv_neq; auto.
+      apply env_equiv_refl.
+    + apply weaken; auto.
   - inv H0.  constructor.  auto. 
   - inv H1.  constructor. apply IHSubst with (env := env0) ( ht := ht ) (tA := tA) (tB := t). 
     auto.  auto.  auto. 
@@ -1441,6 +1418,7 @@ H1 : closed ((
    we're finally ready to prove soundness.
 *)
 Qed.
+
 (* Define the empty heap and the empty heap type *)
 Definition H0 : heap := nil.
 Definition HT0 : heap_typ := nil.
@@ -1521,7 +1499,7 @@ Proof.
     apply H2. destruct H6. destruct H7. apply IHstar_cbv with ( ht := x).
     auto.  auto.
   (* About 12 tactics *)
-Admitted.
+Qed.
 
 (* Now, prove that terms which are well-typed
    in the empty heap don't get stuck. *)
@@ -1534,5 +1512,5 @@ Proof.
    intros.  apply (@soundness' H0 e t h' e' H1 HT0).
    auto. apply empty_heap_typed. 
   (* About 4 tactics *)
-Admitted.
+Qed.
 (* END PROBLEM 10 *)
