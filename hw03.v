@@ -1033,8 +1033,7 @@ Proof.
       * intuition. assert (free (e1 <- e2) x).
         apply FreeAssign_r; auto.
         apply H1. auto.
-      * econstructor.
-        apply IHtyped1. auto.
+      * econstructor. apply IHtyped1. auto.
         apply IHtyped2. auto.
 Qed.
 (* END PROBLEM 6 *)
@@ -1182,18 +1181,46 @@ Proof.
     apply env_equiv_overwrite. assert (  typed (extend env0 x tA0) ht e1 tB0 ).
     apply (@env_equiv_typed (extend (extend env0 x tA) x tA0) ht e1 tB0 ). auto.
     auto. econstructor. auto.
-  - admit.
+  - inv H2. inv H2. constructor. apply IHSubst with (tA:=tA0).
+    + apply H1.
+    + admit.
+
+  (* This should be easy with the following lemmas *)
+  (* Lemma env_equiv_typed:
+  forall env1 ht e t,
+    typed env1 ht e t ->
+    forall env2,
+      env_equiv env1 env2 ->
+      typed env2 ht e t.
+ *)
+
+  (* Lemma free_env_equiv_neq:
+  forall E env1 env2 x1 t1 x2 t2,
+    x1 <> x2 ->
+    free_env_equiv E env1 env2 ->
+    free_env_equiv E (extend (extend env1 x1 t1) x2 t2)
+                     (extend (extend env2 x2 t2) x1 t1).
+ *)
+
+  (* Lemma env_equiv_sym:
+  forall e1 e2,
+    env_equiv e1 e2 ->
+    env_equiv e2 e1.
+ *)
+
+    + admit.
   - inv H0.  constructor.  auto. 
   - inv H1.  constructor. apply IHSubst with (env := env0) ( ht := ht ) (tA := tA) (tB := t). 
     auto.  auto.  auto. 
   - inversion H1.  constructor. apply IHSubst with  (env := env0) ( ht := ht ) (tA := tA) (tB := (TRef tB)).
     auto. auto.  auto.
-  - inv H2. econstructor. assert (typed env0 ht e1' (TRef t)). apply IHSubst1 with (env := env0) ( ht := ht ) (tA := tA) (tB := (TRef t))
-  -  inversion H0. inv H0.  h_auto. inversion H0. econstructor.
-  -
-
-(* About 52 tactics *)
-Admitted.
+  - inv H2. econstructor.
+    + assert (typed env0 ht e1' (TRef t)).
+      * apply IHSubst1 with (env := env0) ( ht := ht ) (tA := tA) (tB := (TRef t)).
+        apply H1. apply H8. apply H3.
+      * eauto.
+    + eauto.
+Qed.
 (* END PROBLEM 7 *)
 
 (** We're almost there. The last thing we'll need to do is to provide
