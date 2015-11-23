@@ -1182,7 +1182,7 @@ Proof.
     apply env_equiv_overwrite. assert (  typed (extend env0 x tA0) ht e1 tB0 ).
     apply (@env_equiv_typed (extend (extend env0 x tA) x tA0) ht e1 tB0 ). auto.
     auto. econstructor. auto.
-  -admit.
+  - inv H2. constructor.  auto. admit.
   - inv H0.  constructor.  auto. 
   - inv H1.  constructor. apply IHSubst with (env := env0) ( ht := ht ) (tA := tA) (tB := t). 
     auto.  auto.  auto. 
@@ -1194,7 +1194,7 @@ Proof.
     auto.  auto. auto.
 
 Qed.
-=======
+
 (* END PROBLEM 7 *)
 
 (** We're almost there. The last thing we'll need to do is to provide
