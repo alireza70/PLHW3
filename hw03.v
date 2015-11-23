@@ -1182,7 +1182,7 @@ Proof.
     apply env_equiv_overwrite. assert (  typed (extend env0 x tA0) ht e1 tB0 ).
     apply (@env_equiv_typed (extend (extend env0 x tA) x tA0) ht e1 tB0 ). auto.
     auto. econstructor. auto.
-  - inv H2. constructor.  auto. admit.
+  - inv H2. constructor.  auto.  admit.
   - inv H0.  constructor.  auto. 
   - inv H1.  constructor. apply IHSubst with (env := env0) ( ht := ht ) (tA := tA) (tB := t). 
     auto.  auto.  auto. 
@@ -1376,7 +1376,9 @@ apply IHstep_cbv. assert (closed e1 /\ closed e2). apply closed_app_inv.
     ( ht := (snoc ht t0)) ( a := (length h)). assert ((length h ) = (length ht)). inversion H1. auto. rewrite H10.  assert (length (snoc ht t0) = S (length ht)). apply length_snoc. rewrite H11. auto. constructor. 
    assert( length (snoc h e) = (S (length h))). apply length_snoc. 
    assert( length (snoc ht t0) = (S (length ht))).  apply length_snoc. rewrite H8. rewrite H9. assert (length h = length ht). inversion H1.  h_auto. rewrite H10. reflexivity.
-   admit.
+   intuition. inversion H8. rewrite length_snoc in H10. inversion H10. unfold lookup. unfold lookup_typ. rewrite nth_eq_snoc. inversion H1. rewrite H9. rewrite nth_eq_snoc. apply heap_weakening with (ht := ht). auto. SearchAbout snoc. apply extends_snoc.
+   rewrite length_snoc in H9. inversion H9. subst. assert (a < length h). auto. unfold lookup. unfold lookup_typ. SearchAbout snoc. rewrite <- nth_lt_snoc with (x := e). rewrite <- nth_lt_snoc. inversion H1. unfold lookup in H5. unfold lookup_typ in H5. 
+   apply heap_weakening with (ht := ht). apply H5 with (a := a).  auto. apply extends_snoc. inversion H1. rewrite <- H4.  auto. auto.
  -inversion H2. assert ( exists ht' : heap_typ,
                heap_typ_extends ht' ht /\
                typed E0 ht' e' (TRef t) /\ heap_typed ht' h'). apply closed_deref_inv in H0. 
@@ -1400,7 +1402,13 @@ apply IHstep_cbv. assert (closed e1 /\ closed e2). apply closed_app_inv.
   assert (typed E0 x e1 (TRef t0)).  apply (@heap_weakening E0 ht x e1 (TRef t0)).  auto. 
   auto.  apply H14.  auto.  auto. 
  -inversion H3. eexists ht. split.  apply extends_refl. split. constructor. constructor.
-  inversion H2. destruct H2.  rewrite <- H2.  apply length_replace .  admit. 
+  inversion H2. destruct H2.  rewrite <- H2.  apply length_replace . intuition.
+  assert (a0 = a -> typed E0 ht (lookup (replace a e h) a0) (lookup_typ ht a0)).
+  intuition. rewrite H12. SearchAbout replace. rewrite lookup_replace_eq. inversion H8. rewrite H16. auto. rewrite H12 in H11. rewrite length_replace in H11. 
+  auto. assert (a0 <> a -> typed E0 ht (lookup (replace a e h) a0) (lookup_typ ht a0)). intros.
+  rewrite lookup_replace_neq. inversion H2. apply H15. rewrite length_replace in H11. auto. auto. destruct (eq_nat_dec a a0); auto.
+ 
+  
 
 (* Having proved progress and preservation, 
 H1 : closed ((
