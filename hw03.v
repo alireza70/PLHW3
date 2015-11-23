@@ -1163,16 +1163,17 @@ Proof.
     apply env_equiv_overwrite. assert (  typed (extend env0 x tA0) ht e1 tB0 ).
     apply (@env_equiv_typed (extend (extend env0 x tA) x tA0) ht e1 tB0 ). auto.
     auto. econstructor. auto.
-  - admit.
+  -admit.
   - inv H0.  constructor.  auto. 
   - inv H1.  constructor. apply IHSubst with (env := env0) ( ht := ht ) (tA := tA) (tB := t). 
     auto.  auto.  auto. 
   - inversion H1.  constructor. apply IHSubst with  (env := env0) ( ht := ht ) (tA := tA) (tB := (TRef tB)).
     auto. auto.  auto.
-  - inv H2. econstructor. assert (typed env0 ht e1' (TRef t)). apply IHSubst1 with (env := env0) ( ht := ht ) (tA := tA) (tB := (TRef t))
-  -  inversion H0. inv H0.  h_auto. inversion H0. econstructor.
-  -(* About 52 tactics *)
-Admitted.
+  - inv H2. econstructor. assert (typed env0 ht e1' (TRef t)). apply IHSubst1 with (env := env0) ( ht := ht ) (tA := tA) (tB := (TRef t)).
+    auto. auto. auto. apply H4. apply IHSubst2 with (env := env0) ( ht := ht ) (tA := tA) (tB := t).
+    auto.  auto. auto.
+
+Qed.
 (* END PROBLEM 7 *)
 
 (** We're almost there. The last thing we'll need to do is to provide
@@ -1446,10 +1447,20 @@ Lemma soundness' :
       typed E0 ht e t ->
       heap_typed ht h ->
       (exists e'' h'', h'; e' ==> h''; e'') \/ isValue e'.
-Proof.
-  intros.  eapply progress. induction 1; intros.
+Proof. 
+  induction 1; intros.
   - apply (@progress ht h e t). auto. auto.
-  -apply (@progress 
+  - assert (closed e1). apply (@typed_E0_closed ht e1  t). auto.
+    assert (forall ht t,
+      heap_typed ht h1 ->
+      typed E0 ht e1 t ->
+      exists ht',
+        heap_typ_extends ht' ht /\
+        typed E0 ht' e2 t /\
+        heap_typed ht' h2).
+    apply (@preservation h1 h2 e1 e2). auto. auto. edestruct H5. apply H3.
+    apply H2. destruct H6. destruct H7. apply IHstar_cbv with ( ht := x).
+    auto.  auto.
   (* About 12 tactics *)
 Admitted.
 
@@ -1461,6 +1472,8 @@ Lemma soundness :
     (H0; e ==>* h'; e') ->
     (exists e'' h'', h'; e' ==> h''; e'') \/ isValue e'.
 Proof.
+   intros.  apply (@soundness' H0 e t h' e' H1 HT0).
+   auto. apply empty_heap_typed. 
   (* About 4 tactics *)
 Admitted.
 (* END PROBLEM 10 *)
