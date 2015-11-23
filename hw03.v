@@ -852,11 +852,14 @@ Proof.
        apply SAssignRight.
        * apply H2.
        * apply H3.
-     + left. inv H2; inv H. admit.
+     + left. inv H2; inv H. assert (h ; (Addr n <- e2) ==>
+               (replace n e2 h) ; (Bool true) ). constructor. auto. assert (length ht = length h ). 
+                unfold heap_typed in H1. destruct H1. auto. rewrite <- H4 . auto. eexists. eexists.
+                apply H4.
  
     
 (* END PROBLEM 4 *)
-
+Qed.
 (*
 
 Next, we'll prove preservation. This is going to be a little harder;
@@ -990,7 +993,7 @@ Proof.
   induction 1. 
   -  h_auto. 
   - h_auto. 
-  - admit.
+  - intuition. admit.
   -  intuition. assert (free e1 x -> False). intuition. assert (free (e1 @ e2) x ).
      constructor. auto. apply H1. auto. assert (free e2 x -> False).
      intuition. assert (free (e1 @ e2) x) .  apply FreeApp_r. auto. apply H1.
@@ -1146,8 +1149,28 @@ Lemma subst_pres_typed:
       typed env ht e2 tA ->
       typed env ht e3 tB.
 Proof.
-  
-  induction 1; intros.
+    induction 1; intros.
+  - inversion H0; h_auto.
+  - inversion H0; h_auto.
+  - inversion H0. unfold extend in H5. break_match. inversion H5. rewrite <- H8.
+    auto.  intuition.  assert (x = x).  reflexivity.  contradiction.
+  - inversion  H1.  unfold extend in H6. break_auto. econstructor. auto.
+  - inversion H2. assert (typed env0 ht e2' tA0). apply IHSubst2 with  ( env := env0 ) (ht := ht ) (tA := tA ) (tB := tA0).
+    auto. auto. auto.  assert (typed env0 ht e1' (tA0 ~> tB)).
+    apply IHSubst1 with  ( env := env0 ) (ht := ht ) (tA := tA ) (tB := (tA0 ~> tB)).
+    auto. auto. auto. econstructor. apply H12. apply H11.
+  - inversion H0.  assert (env_equiv (extend (extend env0 x tA) x tA0) (extend env0 x tA0)).
+    apply env_equiv_overwrite. assert (  typed (extend env0 x tA0) ht e1 tB0 ).
+    apply (@env_equiv_typed (extend (extend env0 x tA) x tA0) ht e1 tB0 ). auto.
+    auto. econstructor. auto.
+  - admit.
+  - inv H0.  constructor.  auto. 
+  - inv H1.  constructor. apply IHSubst with (env := env0) ( ht := ht ) (tA := tA) (tB := t). 
+    auto.  auto.  auto. 
+  - inversion H1.  constructor. apply IHSubst with  (env := env0) ( ht := ht ) (tA := tA) (tB := (TRef tB)).
+    auto. auto.  auto.
+  - inv H2. econstructor. assert (typed env0 ht e1' (TRef t)). apply IHSubst1 with (env := env0) ( ht := ht ) (tA := tA) (tB := (TRef t))
+  -  inversion H0. inv H0.  h_auto. inversion H0. econstructor.
   -(* About 52 tactics *)
 Admitted.
 (* END PROBLEM 7 *)
@@ -1279,7 +1302,7 @@ for this existential, and "eexists" is your friend.
 
   Prove preservation.
 
-*)
+*) 
 Lemma preservation:
   forall h h' e e',
     h; e ==> h'; e' ->
@@ -1294,13 +1317,70 @@ Lemma preservation:
 Proof.
   (* About 153 tactics *)
   induction 1; intros.
-Admitted.
-(* END PROBLEM 9 *)
+  -inversion H2. assert (exists ht' : heap_typ,
+               heap_typ_extends ht' ht /\
+               typed E0 ht' e1' (tA ~> t) /\ heap_typed ht' h').
+  apply IHstep_cbv. assert (closed e1 /\ closed e2). apply closed_app_inv.
+  auto. destruct H10. auto. auto. auto. destruct H10. eexists.  split. destruct H10.
+  apply H10. split. assert (typed E0 x e1 (tA ~> t)).
+  apply (@heap_weakening E0 ht x e1 (tA~>t)).  auto.  destruct H10.
+  auto. econstructor. destruct H10. destruct H12. apply H12. auto. apply (@heap_weakening E0 ht x e2 tA).
+  auto.  destruct H10.  auto. destruct H10. destruct H11. auto.
+  -inversion H3. assert (exists ht' : heap_typ,
+               heap_typ_extends ht' ht /\
+               typed E0 ht' e2' tA  /\ heap_typed ht' h').
+apply IHstep_cbv. assert (closed e1 /\ closed e2). apply closed_app_inv.
+ auto.  destruct H11.  auto. auto. auto.  destruct H11. destruct H11. assert (H11' := H11).
+ destruct H12. assert (H12' := H12). assert (H13' := H13). eexists. split. apply H11. split. 
+ assert (typed E0 x e1 (tA ~> t) ).  apply (@heap_weakening E0 ht x e1 (tA ~> t)). auto.
+ apply H11. econstructor. apply H14. auto. auto.
+  - eexists.  split.  apply extends_refl. split.  
+    inversion H3. inversion H8. assert( forall env ht tA tB,
+      typed (extend env x tA) ht e1 tB ->
+      typed env ht e2 tA ->
+      typed env ht e1' tB).  apply (@subst_pres_typed e1 e2 x e1'). auto.  
+      assert (closed ( \ x, e1) /\ closed  e2) . apply closed_app_inv. auto. destruct H18. auto.
+      (* apply H18 with (tA1 := tA) (tB1 := t)*) admit. auto.
+ -inversion H2. assert ( exists ht' : heap_typ,
+               heap_typ_extends ht' ht /\
+               typed E0 ht' e' t0 /\ heap_typed ht' h').
+  apply IHstep_cbv with (ht := ht ) (t := t0). apply closed_ref_inv in H0. 
+  auto. auto. auto. destruct H8. destruct H8. destruct H9. eexists. split. apply H8. split. constructor. apply H9.
+  auto.
+ - inversion H2. eexists (snoc ht t0). split. induction ht. unfold snoc. constructor. admit.
+    split. assert (lookup_typ (snoc ht t0) (length h) = t0). unfold lookup_typ.  assert (length h = length ht). 
+    admit.  rewrite H8. admit.  assert ( (TRef t0) = TRef (lookup_typ (snoc ht t0) (length h))). admit. rewrite H9. apply WTAddr with (env := E0) 
+    ( ht := (snoc ht t0)) ( a := (length h)). assert (length (snoc ht t0) = S (length h)). admit. rewrite H10. omega. constructor. 
+   assert( length (snoc h e) = (S (length h))). apply length_snoc. 
+   assert( length (snoc ht t0) = (S (length ht))).  apply length_snoc. rewrite H8. rewrite H9. assert (length h = length ht). inversion H1.  h_auto. rewrite H10. reflexivity.
+   admit.
+ -inversion H2. assert ( exists ht' : heap_typ,
+               heap_typ_extends ht' ht /\
+               typed E0 ht' e' (TRef t) /\ heap_typed ht' h'). admit.
+  destruct H8. destruct H8. destruct H9.  eexists x. split. auto.
+  split. constructor. auto. auto.
+ -inversion H2. inversion H6. eexists ht. split. apply extends_refl. 
+  split.  unfold heap_typed in H1. destruct H1. apply  H13. rewrite <- H1 in  H12. auto. auto. 
+ - inversion H2. assert ( exists ht' : heap_typ,
+               heap_typ_extends ht' ht /\
+               typed E0 ht' e1' (TRef t0) /\ heap_typed ht' h'). admit.
+   destruct H10. destruct H10. destruct H11. eexists x. split. auto. split. econstructor.
+   apply H11. auto. apply (@heap_weakening   E0 ht x e2 t0). auto. auto. auto.
 
-(* Having proved progress and preservation,
+ -inversion H3. assert (exists ht' : heap_typ,
+               heap_typ_extends ht' ht /\
+               typed E0 ht' e2' t0 /\ heap_typed ht' h'). admit.
+  destruct H11. destruct H11. destruct H12. eexists x.  split.  auto.  split.  econstructor.  
+  assert (typed E0 x e1 (TRef t0)).  apply (@heap_weakening E0 ht x e1 (TRef t0)).  auto. 
+  auto.  apply H14.  auto.  auto. 
+ -inversion H3. eexists ht. split.  apply extends_refl. split. constructor. constructor.
+  inversion H2. destruct H2.  rewrite <- H2.  apply length_replace . admit. 
+
+(* Having proved progress and preservation, 
+H1 : closed ((
    we're finally ready to prove soundness.
 *)
-
+Qed.
 (* Define the empty heap and the empty heap type *)
 Definition H0 : heap := nil.
 Definition HT0 : heap_typ := nil.
@@ -1367,6 +1447,9 @@ Lemma soundness' :
       heap_typed ht h ->
       (exists e'' h'', h'; e' ==> h''; e'') \/ isValue e'.
 Proof.
+  intros.  eapply progress. induction 1; intros.
+  - apply (@progress ht h e t). auto. auto.
+  -apply (@progress 
   (* About 12 tactics *)
 Admitted.
 
