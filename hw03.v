@@ -840,22 +840,24 @@ Proof.
      + left. inv H; inv H1.
        exists (lookup h a). exists (h).
        apply SDerefAddr. inv H0. symmetry in H2. rewrite H2 in H6. apply H6.
-   - destruct IHtyped1; destruct IHtyped2; auto.
-     + left. destruct H2; destruct H3. destruct H2; destruct H3.
+   - left. destruct IHtyped1; destruct IHtyped2; auto.
+     + destruct H2; destruct H3. destruct H2; destruct H3.
        exists (x <- e2). exists (x1).
        apply SAssignLeft. apply H2.
-     + left. destruct H2. destruct H2.
+     + destruct H2. destruct H2.
        exists (x <- e2). exists (x0).
        apply SAssignLeft. apply H2.
-     + left. destruct H3. destruct H3.
+     + destruct H3. destruct H3.
        exists (e1 <- x). exists (x0).
        apply SAssignRight.
        * apply H2.
        * apply H3.
-     + left. inv H2; inv H. assert (h ; (Addr n <- e2) ==>
-               (replace n e2 h) ; (Bool true) ). constructor. auto. assert (length ht = length h ). 
-                unfold heap_typed in H1. destruct H1. auto. rewrite <- H4 . auto. eexists. eexists.
-                apply H4.
+     + inv H2; inv H.
+       assert (h ; (Addr n <- e2) ==>
+               (replace n e2 h) ; (Bool true) ).
+       * constructor. auto.
+         unfold heap_typed in H1. destruct H1. rewrite H1. auto.
+       * eexists. eexists. apply H4.
  
     
 (* END PROBLEM 4 *)
@@ -990,33 +992,50 @@ Lemma weaken:
       ~ free e x ->
       typed (extend env x t') ht e t.
 Proof.
-  induction 1. 
-  -  h_auto. 
+  induction 1.
+  - h_auto.
   - h_auto. 
-  - intuition. admit.
-  -  intuition. assert (free e1 x -> False). intuition. assert (free (e1 @ e2) x ).
-     constructor. auto. apply H1. auto. assert (free e2 x -> False).
-     intuition. assert (free (e1 @ e2) x) .  apply FreeApp_r. auto. apply H1.
-     auto.  econstructor. eapply IHtyped1. auto. eapply IHtyped2. auto.
-  - h_auto. assert (x = x0 \/ ( (x <> x0) /\(free e x0 -> False))). h_auto.  admit.
-    destruct H1. rewrite <- H1.  assert ( env_equiv (extend (extend env0 x t') x tA) 
-    (extend env0 x tA)). apply (@env_equiv_overwrite env0 x t' tA ). apply (@env_equiv_typed
-     (extend env0 x tA) ht e tB ) . auto. apply env_equiv_sym. auto. destruct H1.
-    assert (env_equiv (extend (extend env0 x tA) x0 t') (extend (extend env0 x0 t') x tA)).
-    apply env_equiv_neq. assumption. apply env_equiv_refl. 
-    eapply (@env_equiv_typed (extend (extend env0 x tA) x0 t') ht e tB).
-    apply IHtyped. auto. auto.
-  -intuition. h_auto.
-  -intuition. h_auto. apply IHtyped with (x := x) (t' := t'). intuition. assert (free (ref e) x).
-   constructor. auto. apply H0. auto.
-  -intuition. h_auto. apply IHtyped with (x := x) (t' := t'). intuition. assert (free (!e) x).
-   constructor. auto. apply H0. auto.
-  -intuition. h_auto. assert (free e1 x -> False). intuition.  assert (free (e1 <- e2) x).
-   constructor. auto. apply H1. auto. 
-   assert (free e2 x -> False). intuition.  assert (free (e1 <- e2) x).
-   apply FreeAssign_r.  auto.  apply H1. auto. econstructor. apply IHtyped1. auto.
-   apply IHtyped2. auto.
-
+  - constructor. unfold extend.
+    break_match; subst; auto.
+    destruct H0. constructor.
+  - intuition. assert (free e1 x -> False).
+    + intuition. assert (free (e1 @ e2) x ).
+      * constructor. auto.
+      * apply H1. auto.
+    + assert (free e2 x -> False).
+      * intuition. assert (free (e1 @ e2) x).
+        apply FreeApp_r. auto. apply H1. auto.
+      * econstructor. eapply IHtyped1. auto. eapply IHtyped2. auto.
+  - constructor.
+    case (string_dec x x0); intros; subst.
+    + eapply env_equiv_typed; eauto.
+      apply env_equiv_sym.
+      apply env_equiv_overwrite.
+    + cut (~ free e x0); intros.
+      * apply IHtyped with (t' := t') in H1; auto.
+        eapply env_equiv_typed; eauto.
+        apply env_equiv_neq; auto.
+        apply env_equiv_refl.
+      * intuition. apply H0.
+        constructor; auto.
+  - intuition. h_auto.
+  - intuition. h_auto. apply IHtyped. intuition. assert (free (ref e) x).
+    + constructor. auto.
+    + apply H0. auto.
+  - intuition. h_auto. apply IHtyped. intuition. assert (free (!e) x).
+    + constructor. auto.
+    + apply H0. auto.
+  - intuition. assert (free e1 x -> False).
+    + intuition. assert (free (e1 <- e2) x).
+      * constructor. auto.
+      * apply H1. auto. 
+    + assert (free e2 x -> False).
+      * intuition. assert (free (e1 <- e2) x).
+        apply FreeAssign_r; auto.
+        apply H1. auto.
+      * econstructor.
+        apply IHtyped1. auto.
+        apply IHtyped2. auto.
 Qed.
 (* END PROBLEM 6 *)
 
@@ -1169,11 +1188,13 @@ Proof.
     auto.  auto.  auto. 
   - inversion H1.  constructor. apply IHSubst with  (env := env0) ( ht := ht ) (tA := tA) (tB := (TRef tB)).
     auto. auto.  auto.
+
   - inv H2. econstructor. assert (typed env0 ht e1' (TRef t)). apply IHSubst1 with (env := env0) ( ht := ht ) (tA := tA) (tB := (TRef t)).
     auto. auto. auto. apply H4. apply IHSubst2 with (env := env0) ( ht := ht ) (tA := tA) (tB := t).
     auto.  auto. auto.
 
 Qed.
+=======
 (* END PROBLEM 7 *)
 
 (** We're almost there. The last thing we'll need to do is to provide
